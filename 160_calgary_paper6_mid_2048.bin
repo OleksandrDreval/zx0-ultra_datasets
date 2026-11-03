@@ -1,0 +1,48 @@
+the
+reduction in the key size.  So, there is no net memory saving  over
+open addressing techniques such as BLP.
+.pp
+Amongst the possible applications of compact hashing is the storage
+of trees and TRIES without the use of pointers but still preserving
+a $log N$ retrieval time. 
+It is hoped to report on this application in more detail later.
+.pp
+Pascal versions of the algorithms described below are available
+from the author.
+.sh "2 Bidirectional linear probing."
+.pp
+I will now introduce the open addressing technique which forms the basis
+of compact hashing.
+The 
+.ul
+hash table
+in which the keys will be stored is an array $T[ 0M ]$ .  I will
+be concerned only with the the keys themselves as the 
+items associated with each key do not 
+significantly affect the algorithms.  In order to compute the location
+for each key I will use two functions: $t$ which randomises the original
+keys, and $h$ which computes a value in the range $0M$.  
+.pp
+Let $KK$ be the set of all possible keys and $HH$ be the set of all possible
+transformed keys.  Then $t: KK -> HH$ is an invertible function.
+This function is introduced
+to ensure that the keys stored are  random and so, as a consequence,
+the hashing
+procedure has a satisfactory
+average performance.  In what follows these transformed
+keys will be used rather than the original keys.  For example, it is the 
+transformed keys that are stored in $T$.  (-1 is used to indicate an unoccupied
+location in $T$.)
+.pp
+$h: HH ->"{" 0M "}"$ and has the 
+property that for
+$H sub 1 ~, H sub 2 ~ "\(mo" HH$
+$H sub 1 ~<=~ H sub 2~~ "\fBiff\fP"~~h(H sub 1 ) ~<=~ h(H sub 2 )$.  
+As a consequence the keys will be mapped 
+into the hash table in the same order as the values of their transformed
+keys.  
+This ordering is essential to the compaction attained later.
+Suitable functions $t$ and $h$ have been extensively discussed 
+(Carter and Wegman, [3]; Knott [7]; Lum, [9]; Lum, Yuen and Dodd, [10]).
+These authors show that there are functions which almost always make
+the distribution of transformed keys random

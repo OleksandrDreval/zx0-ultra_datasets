@@ -1,0 +1,142 @@
+/*
+ * ultra_engine.c - Exact Unpruned Multi-State Automaton DP, Bitstream Encoder,
+ *                  OpenMP Transform Search, and In-Memory Self-Verifier.
+ *
+ * Based on the ZX0 compression engine by Einar Saukas (c) 2021 (BSD 3-Clause).
+ * Exact Pareto-frontier optimal parser, wildcard materialization, and multi-core
+ * Stride-Delta / Adaptive-k optimizations by Oleksandr Dreval (MIT License).
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "zx0_ultra.h"
+
+#include <assert.h>
+#include <limits.h>
+#ifdef _OPENMP
+#include <omp.h>
+#else
+static inline int omp_in_parallel(void) { return 0; }
+#endif
+#include <stdlib.h>
+#include <string.h>
+
+#define COST_INFINITY               0x3fffffff
+#define EXACT_FRONTIER_CAPACITY     32
+#define INITIAL_NODE_POOL_CAPACITY  65536
+#define NODE_POOL_GC_THRESHOLD      (2 * 1024 * 1024)
+#define EOF_CONTROL_AND_ELIAS_BITS  18
+#define FILTER_WORD_BYTES           2
+#define ADPK_HEADER_BYTES           1
+#define MAX_ADPK_LSB_BITS           12
+#define MIN_MATCH_LENGTH_NEW_OFFSET 2
+#define X86_OPCODE_CALL_REL16       0xE8
+
+typedef struct {
+    int prev_node;
+    int end_pos;
+    int offset; /* 0 denotes a Literal run; > 0 denotes a Match with this offset */
+} ParseNode;
+
+typedef struct {
+    ParseNode *nodes;
+    int count;
+    int capacity;
+} NodePool;
+
+typedef struct {
+    int pos;
+    int base_cost;
+    int node_idx;
+} FrontierEntry;
+
+/* Cache-line aligned layout: count + entries[0..4] reside in a single 64-byte cache line */
+typedef struct {
+    int count;
+    FrontierEntry entries[EXACT_FRONTIER_CAPACITY];
+} MonotonicFrontier;
+
+typedef struct {
+    int end_pos;
+    int length;
+    int offset; /* 0 = Literal, > 0 = Match */
+} Token;
+
+static inline int compute_elias_gamma_bits(int value) {
+    assert(value >= 1);
+#if defined(__GNUC__) || defined(__clang__)
+    return 1 + 2 * (31 - __builtin_clz((unsigned int)value));
+#else
+    int bits = 1;
+    while (value >>= 1) {
+        bits += 2;
+    }
+    return bits;
+#endif
+}
+
+static inline int compute_new_offset_overhead_bits(int offset, int offset_lsb_bits) {
+    int msb_group = ((offset - 1) >> offset_lsb_bits) + 1;
+    return 1 + compute_elias_gamma_bits(msb_group) + offset_lsb_bits;
+}
+
+static void node_pool_init(NodePool *pool, int initial_capacity) {
+    pool->capacity = initial_capacity > 0 ? initial_capacity : INITIAL_NODE_POOL_CAPACITY;
+    pool->count = 0;
+    pool->nodes = (ParseNode *)malloc((size_t)pool->capacity * sizeof(ParseNode));
+    assert(pool->nodes != NULL);
+}
+
+static void node_pool_free(NodePool *pool) {
+    free(pool->nodes);
+    pool->nodes = NULL;
+    pool->count = 0;
+    pool->capacity = 0;
+}
+
+static int node_pool_push(NodePool *pool, int prev_node, int end_pos, int offset) {
+    if (pool->count >= pool->capacity) {
+        pool->capacity *= 2;
+        pool->nodes = (ParseNode *)realloc(pool->nodes, (size_t)pool->capacity * sizeof(ParseNode));
+        assert(pool->nodes != NULL);
+    }
+    int idx = pool->count++;
+    pool->nodes[idx].prev_node = prev_node;
+    pool->nodes[idx].end_pos = end_pos;
+    pool->nodes[idx].offset = offset;
+    return idx;
+}
+
+/*
+ * Exact O(Live) Topological Mark-and-Compact Garbage Collector for NodePool.
+ * Reclaims dead ParseNodes displaced from monotonic frontiers, bounding per-thread memory to ~24 MB
+ * even on highly repetitive 64 KB files across 16 simultaneous OpenMP threads.
+ */
+static void node_pool_compact(
+    NodePool *pool,
+    int *best_any_node,
+    int upto_pos,
+    MonotonicFrontier *lit_frontiers,
+    MonotonicFrontier *rep_frontiers,
+    const uint8_t *rep_nonempty,
+    int max_window
+) {
+    if (pool->count == 0) {
+        return;
+    }
+    int *remap = (int *)malloc((size_t)pool->count * sizeof(int));
+    assert(remap != NULL);
+    for (int i = 0; i < pool->count; i++) {
+        remap[i] = -1;
+    }
+
+    for (int p = 1; p <= upto_pos; p++) {
+        int nid = best_any_node[p];
+        if (nid >= 0) {
+            remap[nid] = 1;
+        }
+    }
+    for (int off = 0; off <= max_window; off++) {
+        int lc = lit_frontiers[off].count;
+        for (int k = 0; k < lc; k++) {
+          

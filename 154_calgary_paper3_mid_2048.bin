@@ -1,0 +1,48 @@
+homeostasis'' and, more recently, ``autopoiesis''.
+.pp
+Our search in this paper will pursue these strands separately.
+Goals and plans have received much attention in AI, both from the point of
+view of understanding (or at least explaining) stories involving human goals
+and how they can be achieved or frustrated, and in purely artificial systems
+which learn by discovery.
+Biologists and psychologists have studied goal-seeking behavior in people,
+and come to conclusions which seem to indicate remarkable similarities with
+the approach taken by current AI systems to setting and pursuing goals.
+On the other side of the coin, there are strong arguments that these
+similarities should be viewed with a good deal of suspicion.
+.pp
+The second strand of meaning, organic independence, has not been contemplated
+explicitly in mainstream computer science.
+There have been a number of well-known developments on the periphery of
+the subject which do involve self-replicating organisms.
+Examples include games such as ``life'' (Berlekamp \fIet al\fR, 1982) and
+``core wars'' (Dewdney, 1984), as well as
+cellular (eg Codd, 1968), self-reproducing (eg von Neumann, 1966),
+and evolutionary (eg Fogel \fIeg al\fR, 1966) automata.
+.[
+Dewdney 1984
+.]
+.[
+Berlekamp Conway Guy 1982
+.]
+.[
+Codd 1968 cellular automata
+.]
+.[
+von Neumann 1966 self-reproducing automata
+.]
+.[
+Fogel Owens Walsh 1966
+.]
+However, these seem artificial and contrived examples of autonomy.
+In contrast, some autonomous systems have recently arisen naturally in
+computer software.
+We examine the system-theoretic idea of ``autopoiesis'' and then look at these
+software developments in this context.
+.sh "Goal-seeking \(em artificial and natural"
+.pp
+In a discussion of robots and emotions, Sloman and Croucher (1981) note that
+many people deny that machines could ever be said to have their own goals.
+``Machines hitherto familiar to us either are not goal-directed at all
+(clocks, etc) or else, like current game-playing computer programs,
+have a simple hierarchical set of goals, with the

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Canterbury &amp; Silesia Compression Benchmark Report</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Lossless Data Compression Corpus Evaluation</h1>
+    <table class="benchmark-table">
+      <thead>
+        <tr><th>Corpus File</th><th>Category</th><th>Raw Size</th><th>ZX0-Ultra</th><th>Zlib-9</th><th>LZMA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="fname">dataset_01.bin</td><td class="cat">structured_1</td><td class="num">1088</td><td class="num">428</td><td class="num">449</td><td class="num">412</td></tr>
+        <tr><td class="fname">dataset_02.bin</td><td class="cat">structured_2</td><td class="num">1152</td><td class="num">446</td><td class="num">468</td><td class="num">429</td></tr>
+        <tr><td class="fname">dataset_03.bin</td><td class="cat">structured_3</td><td class="num">1216</td><td class="num">464</td><td class="num">487</td><td class="num">446</td></tr>
+        <tr><td class="fname">dataset_04.bin</td><td class="cat">structured_0</td><td class="num">1280</td><td class="num">482</td><td class="num">506</td><td class="num">463</td></tr>
+        <tr><td class="fname">dataset_05.bin</td><td class="cat">structured_1</td><td class="num">1344</td><td class="num">500</td><td class="num">525</td><td class="num">480</td></tr>
+        <tr><td class="fname">dataset_06.bin</td><td class="cat">structured_2</td><td class="num">1408</td><td class="num">518</td><td class="num">544</td><td class="num">497</td></tr>
+        <tr><td class="fname">dataset_07.bin</td><td class="cat">structured_3</td><td class="num">1472</td><td class="num">536</td><td class="num">563</td><td class="num">514</td></tr>
+        <tr><td class="fname">dataset_08.bin</td><td class="cat">structured_0</td><td class="num">1536</td><td class="num">554</td><td class="num">582</td><td class="num">531</td></tr>
+        <tr><td class="fname">dataset_09.bin</td><td class="cat">structured_1</td><td 

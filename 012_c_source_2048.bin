@@ -1,0 +1,61 @@
+static inline int evaluate_frontier(const Frontier *f, int pos, int *node_out) {
+    int best_cost = 0x3fffffff;
+    int best_node = -1;
+    for (int k = 0; k < f->count; k++) {
+        int len = pos - f->entries[k].pos;
+        int cost = f->entries[k].base_cost + elias_gamma_bits(len);
+        if (cost < best_cost) {
+            best_cost = cost;
+            best_node = f->entries[k].node_idx;
+        }
+    }
+    *node_out = best_node;
+    return best_cost;
+}
+static inline int evaluate_frontier(const Frontier *f, int pos, int *node_out) {
+    int best_cost = 0x3fffffff;
+    int best_node = -1;
+    for (int k = 0; k < f->count; k++) {
+        int len = pos - f->entries[k].pos;
+        int cost = f->entries[k].base_cost + elias_gamma_bits(len);
+        if (cost < best_cost) {
+            best_cost = cost;
+            best_node = f->entries[k].node_idx;
+        }
+    }
+    *node_out = best_node;
+    return best_cost;
+}
+static inline int evaluate_frontier(const Frontier *f, int pos, int *node_out) {
+    int best_cost = 0x3fffffff;
+    int best_node = -1;
+    for (int k = 0; k < f->count; k++) {
+        int len = pos - f->entries[k].pos;
+        int cost = f->entries[k].base_cost + elias_gamma_bits(len);
+        if (cost < best_cost) {
+            best_cost = cost;
+            best_node = f->entries[k].node_idx;
+        }
+    }
+    *node_out = best_node;
+    return best_cost;
+}
+static inline int evaluate_frontier(const Frontier *f, int pos, int *node_out) {
+    int best_cost = 0x3fffffff;
+    int best_node = -1;
+    for (int k = 0; k < f->count; k++) {
+        int len = pos - f->entries[k].pos;
+        int cost = f->entries[k].base_cost + elias_gamma_bits(len);
+        if (cost < best_cost) {
+            best_cost = cost;
+            best_node = f->entries[k].node_idx;
+        }
+    }
+    *node_out = best_node;
+    return best_cost;
+}
+static inline int evaluate_frontier(const Frontier *f, int pos, int *node_out) {
+    int best_cost = 0x3fffffff;
+    int best_node = -1;
+    for (int k = 0; k < f->count; k++) {
+      

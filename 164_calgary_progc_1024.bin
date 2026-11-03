@@ -1,0 +1,43 @@
+/* 
+ * Compress - data compression program 
+ */
+#define	min(a,b)	((a>b) ? b : a)
+
+/*
+ * machine variants which require cc -Dmachine:  pdp11, z8000, pcxt
+ */
+
+/*
+ * Set USERMEM to the maximum amount of physical user memory available
+ * in bytes.  USERMEM is used to determine the maximum BITS that can be used
+ * for compression.
+ *
+ * SACREDMEM is the amount of physical memory saved for others; compress
+ * will hog the rest.
+ */
+#ifndef SACREDMEM
+#define SACREDMEM	0
+#endif
+
+#ifndef USERMEM
+# define USERMEM 	450000	/* default user memory */
+#endif
+
+#ifdef interdata		/* (Perkin-Elmer) */
+#define SIGNED_COMPARE_SLOW	/* signed compare is slower than unsigned */
+#endif
+
+#ifdef pdp11
+# define BITS 	12	/* max bits/code for 16-bit machine */
+# define NO_UCHAR	/* also if "unsigned char" functions as signed char */
+# undef USERMEM 
+#endif /* pdp11 */	/* don't forget to compile with -i */
+
+#ifdef z8000
+# define BITS 	12
+# undef vax		/* weird preprocessor */
+# undef USERMEM 
+#endif /* z8000 */
+
+#ifdef pcxt
+# define BITS   

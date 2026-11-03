@@ -1,0 +1,109 @@
+    begin
+         S:=ZeroS;
+         Closed:=false;
+      end else
+      begin
+         cardinality:=finite;exp:=E;mantissa:=M;
+      end;
+   end;
+end;
+end;{NormalizeUp}
+
+procedure NormalizeDn(E,M:integer;var S:Sreal;var Closed:boolean);
+begin
+with S do
+begin
+   if M=0 then S:=ZeroS else
+   if M>0 then
+   begin
+      while M >= Maxinf do
+      begin 
+	 if M mod 10 > 0 then Closed:=false else
+	 if M mod 10 < 0 then halt;
+	 M:=M div 10;
+	 E:=E+1;
+      end;
+	 
+      while (M < Maxinf div 10) do
+      begin M:=M*10; E:=E-1; 
+      end;
+
+      if E > Maxexp then {overflow-set to largest positive value}
+      begin 
+	 S:=PlusFiniteS;
+	 Closed:=false;
+      end else
+      if E < Minexp then {underflow-set to zero}
+      begin S:=ZeroS; Closed:=false;
+      end else
+      begin cardinality:=finite;exp:=E;mantissa:=M;
+      end;
+   end else	 
+   if M < 0 then
+   begin
+      while M <= Mininf do
+      begin 
+	 if M mod 10 < 0 then 
+	 begin Closed:=false; M:=M div 10 -1;end
+	 else 
+	 if M mod 10 = 0 then M:=M div 10 
+	 else halt;
+	 E:=E+1;
+      end;
+	 
+      while (M>Mininf div 10) do
+      begin M:=M*10; E:=E-1; 
+      end;
+
+      if E > Maxexp then {overflow}
+      begin 
+         S:=MinusInfS;
+         Closed:=false;
+      end 
+      else
+      if E < Minexp then {underflow}
+      begin S:=MinusSmallS; Closed:=false;
+      end else
+      begin
+         cardinality:=finite;exp:=E;mantissa:=M;
+      end;
+   end;
+end;
+end;{NormalizeDn}
+
+procedure WriteS(X:Sreal);
+var E,M:integer;
+begin
+with X do
+begin
+   case edge of
+   lin: write('[');
+   lout: write('(');
+   hin,hout:
+   end;
+   
+   case cardinality of
+   infinite: write('inf':Digits+4); 
+   finite: 
+      if mantissa = 0 then write(0:Digits+1,' ':3)
+      else begin
+         M:=mantissa;
+	 E:=exp; 
+         while (M mod 10 = 0) do
+	 begin M:=M div 10; E:=E+1;
+	 end;
+         write(M:Digits+1,'e',E-Digits:2);
+      end;
+   end;
+   
+   case edge of 
+   hin: write(']');
+   hout:write(')');
+   lin,lout:
+   end;
+end;
+end;{WriteS}
+
+procedure WriteInt(I:Int);
+begin
+   with I

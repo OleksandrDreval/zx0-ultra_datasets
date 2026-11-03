@@ -1,0 +1,29 @@
+{
+  "status": "success",
+  "results_count": 1,
+  "papers": [
+    {
+      "id": "2409.12146v1",
+      "title": "Lempel-Ziv (LZ77) Factorization in Sublinear Time",
+      "pdf_url": "https://arxiv.org/pdf/2409.12146v1",
+      "summary": "Lempel-Ziv (LZ77) factorization is a fundamental problem in string processing: Greedily partition a given string $T$ from left to right into blocks (called phrases) so that each phrase is either the leftmost occurrence of a letter or the longest prefix of the unprocessed suffix that has another occurrence earlier in $T$. Due to numerous applications, LZ77 factorization is one of the most studied problems on strings. In the 47 years since its inception, several algorithms were developed for different models of computation, including parallel, GPU, external-memory, and quantum. Remarkably, however, the complexity of the most basic variant is still not settled: All existing algorithms in the RAM model run in $\u03a9(n)$ time, which is a $\u0398(\\log n)$ factor away from the lower bound of $\u03a9(n/\\log n)$ (following from the necessity to read the input, which takes $\u0398(n/\\log n)$ space for $T\\in\\{0,1\\}^{n}$).   We present the first $o(n)$-time algorithm for LZ77 factorization, breaking the linear-time barrier present for nearly 50 years. For $T\\in\\{0,1\\}^{n}$, our algorithm runs in $\\mathcal{O}(n/\\sqrt{\\log n})=o(n)$ time and uses the optimal $\\mathcal{O}(n/\\log n)$ working space. Our algorithm generalizes to $\u03a3=[0..\u03c3)$, where $\u03c3=n^{\\mathcal{O}(1)}$. The runtime and working space then become $\\mathcal{O}((n\\log\u03c3)/\\sqrt{\\log n})$ and $\\mathcal{O}(n/\\log_\u03c3 n)$. To obtain our algorithm, we prove a more general result: For any constant $\u03b5\\in(0,1)$ and $T\\in[0..\u03c3)^{n}$, in $\\mathcal{O}((n\\log\u03c3)/\\sqrt{\\log n})$ time and using $\\mathcal{O}(n/\\log_\u03c3n)$ space, we can construct an $\\mathcal{O}(n/\\log_\u03c3n)$-size index that, given any $P=T[j..j+\\ell)$ (represented as $(j,\\ell)$), computes the leftmost occurrence of $P$ in $T$ in $\\mathcal{O}(\\log^\u03b5n)$ time. In other words, we solve the indexing/online variant of the LZ77 problem.",
+      "published": "2024-09-18T17:09:33Z",
+      "comment": "Accepted to FOCS 2024",
+      "primary_category": "cs.DS",
+      "doi": "10.1109/FOCS61266.2024.00122",
+      "authors": [
+        "Dominik Kempa",
+        "Tomasz Kociumaka"
+      ]
+    }
+  ]
+}
+{
+  "status": "success",
+  "results_count": 2,
+  "papers": [
+    {
+      "id": "2409.12146v1",
+      "title": "Lempel-Ziv (LZ77) Factorization in Sublinear Time",
+      "pdf_url": "https://arxiv.org/pdf/2409.12146v1",
+      "summary": "Lempel-Ziv (LZ77) factorization is a fundamental problem in string processing: Greedily partition a given string $T$ from left to right into blocks (called phrases) so that each phrase is either the leftmost occurrence of a letter or the longest prefix of the unprocessed suffix that has another occurrence earlier in $T$. Due to numerous applications, LZ77 factorization is one of the most studied problems on strings. In the 47 years since its inception, several algorithms were developed for different models of computation, including parallel, GPU, external-memory, and quantum. Remarkably, however, the complexity of the most basic variant is still not settled: All existing algorithms in the RAM model run in $\u03a9(n)$ time, which is a $\u0398(\\log n)$ factor away from the lower bound of $\u03a9(n/\\log n)$ (following from the necessity to read the input, which takes $\u0398(n/\\log n)$ space for $T\\in\\{0,1\\}^{n}$).   We present the first $o(n)$-time algorithm for LZ77 factorization, breaking the linear-time barrier present for nearly 50 years. For $T\\in\\{0,1\\}^{n}$, our algorithm runs in $\\mathcal{O}(n/\\sqrt{\\log n})=o(n)$ time and uses the optimal $\\mathcal{O}(n/\\log n)$ working space. Our algorithm generalizes to $\u03a3=[0..\u03c3)$, where $\u03c3=n^{\\mathcal{O}(1)}$. The runtime and working space then become $\\mathcal{O}((n\\log\u03c3)/\\sqrt{\\log n})$ and

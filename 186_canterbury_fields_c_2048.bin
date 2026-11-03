@@ -1,0 +1,68 @@
+#ifndef lint
+static char Rcs_Id[] =
+    "$Id: fields.c,v 1.7 1994/01/06 05:26:37 geoff Exp $";
+#endif
+
+/*
+ * $Log: fields.c,v $
+ * Revision 1.7  1994/01/06  05:26:37  geoff
+ * Get rid of all references to System V string routines, for portability
+ * (sigh).
+ *
+ * Revision 1.6  1994/01/05  20:13:43  geoff
+ * Add the maxf parameter
+ *
+ * Revision 1.5  1994/01/04  02:40:21  geoff
+ * Make the increments settable (field_line_inc and field_field_inc).
+ * Add support for the FLD_NOSHRINK flag.
+ *
+ * Revision 1.4  1993/09/27  17:48:02  geoff
+ * Fix some lint complaints and some parenthesization errors.
+ *
+ * Revision 1.3  1993/09/09  01:11:11  geoff
+ * Add a return value to fieldwrite.  Add support for backquotes and for
+ * unstripped backslashes.
+ *
+ * Revision 1.2  1993/08/26  00:02:50  geoff
+ * Fix a stupid null-pointer bug
+ *
+ * Revision 1.1  1993/08/25  21:32:05  geoff
+ * Initial revision
+ *
+ */
+
+#include <stdio.h>
+#include "config.h"
+#include "fields.h"
+
+field_t *	fieldread P ((FILE * file, char * delims,
+				  int flags, int maxf));
+				/* Read a line with fields from a file */
+field_t *	fieldmake P ((char * line, int allocated, char * delims,
+				  int flags, int maxf));
+				/* Make a field structure from a line */
+static field_t * fieldparse P ((field_t * fieldp, char * line, char * delims,
+				  int flags, int maxf));
+				/* Parse the fields in a line */
+static int	fieldbackch P ((char * str, char ** out, int strip));
+				/* Process backslash sequences */
+int		fieldwrite P ((FILE * file, field_t * fieldp, int delim));
+				/* Write a line with fields to a file */
+void		fieldfree P ((field_t * fieldp));
+				/* Free a field returned by fieldread */
+
+unsigned int	field_field_inc = 20; /* Increment to increase # fields by */
+unsigned int	field_line_inc = 512; /* Incr to increase line length by */
+
+#ifndef USG
+#define strchr	index
+#endif /* USG */
+
+extern void	free ();
+extern char *	malloc ();
+extern char *	realloc ();
+extern char *	strchr ();
+extern int	strlen ();
+
+/*
+ * Read one line of the given file into a buffer

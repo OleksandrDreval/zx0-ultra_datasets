@@ -1,0 +1,47 @@
+tions in fixed point.
+ *
+ * Revision 3.3  85/06/24  21:53:24  joe
+ * Incorporate portability suggestion for M_XENIX.  Got rid of text on #else
+ * and #endif lines.  Cleaned up #ifdefs for vax and interdata.
+ *
+ * Revision 3.2  85/06/06  21:53:24  jaw
+ * Incorporate portability suggestions for Z8000, IBM PC/XT from mailing list.
+ * Default to "quiet" output (no compression statistics).
+ *
+ * Revision 3.1  85/05/12  18:56:13  jaw
+ * Integrate decompress() stack speedups (from early pointer mods by McKie).
+ * Repair multi-file USERMEM gaffe.  Unify 'force' flags to mimic semantics
+ * of SVR2 'pack'.  Streamline block-compress table clear logic.  Increase 
+ * output byte count by magic number size.
+ * 
+ * Revision 3.0   84/11/27  11:50:00  petsd!joe
+ * Set HSIZE depending on BITS.  Set BITS depending on USERMEM.  Unrolled
+ * loops in clear routines.  Added "-C" flag for 2.0 compatibility.  Used
+ * unsigned compares on Perkin-Elmer.  Fixed foreground check.
+ *
+ * Revision 2.7   84/11/16  19:35:39  ames!jaw
+ * Cache common hash codes based on input statistics; this improves
+ * performance for low-density raster images.  Pass on #ifdef bundle
+ * from Turkowski.
+ *
+ * Revision 2.6   84/11/05  19:18:21  ames!jaw
+ * Vary size of hash tables to reduce time for small files.
+ * Tune PDP-11 hash function.
+ *
+ * Revision 2.5   84/10/30  20:15:14  ames!jaw
+ * Junk chaining; replace with the simpler (and, on the VAX, faster)
+ * double hashing, discussed within.  Make block compression standard.
+ *
+ * Revision 2.4   84/10/16  11:11:11  ames!jaw
+ * Introduce adaptive reset for block compression, to boost the rate
+ * another several percent.  (See mailing list notes.)
+ *
+ * Revision 2.3   84/09/22  22:00:00  petsd!joe
+ * Implemented "-B" block compress.  Implemented REVERSE sorting of tab_next.
+ * Bug fix for last bits.  Changed fwrite to putchar loop everywhere.
+ *
+ * Revision 2.2   84/09/18  14:12:21  ames!jaw
+ * Fold in news changes, small machine typedef from thomas,
+ * #ifdef interdata from joe.
+ *
+ * Revision 2.1   84/09/10  1

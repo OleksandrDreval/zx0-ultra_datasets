@@ -1,0 +1,23 @@
+Login: ian
+Password:
+Last login: Fri Aug 28 13:48:03 from vaxb
+This login: Fri Aug 28 14:18:21 from vaxb
+4.3 BSD+NFS UNIX #25: Fri Aug 28 08:08:07 MDT 1987
+
+There is a New version of the Verdix Ada compiler installed on Vaxc.  All
+persons using this compiler please contact Terry as soon as possible.  Also,
+if there is anyone using the nyu ada or telesoft ada compilers please let
+Terry know, we would like to remove them from the system, if they are not
+being used. (we need the disk space!) Thanks.
+
+The imagen is once again operational but with reduced capacity (one of the
+memory boards is being repaired).  Large documents may not work.
+
+vaxb!ian      ttyp4   Aug 28 14:18      (vaxb)
+Welcome to Freedman's Input Line Editor (FILE).  Version: 87-01-11
+Please wait until your shell prompt appears (ESC-? for help).
+hi, terminal is amb-xl
+You are already logged in somewhere
+Harold as adjunct??? -- and reply to his mail
+rlogin vaxb -8 | tee transcript?
+VAXB cd ~/courses/551cd ~/co

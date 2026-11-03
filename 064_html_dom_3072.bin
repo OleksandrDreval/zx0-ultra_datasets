@@ -1,0 +1,70 @@
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td>ZX0-v2</td><td>1024 B</td><td>67 B</td><td>50.0%</td></tr>
+        <tr><td>UNIV-93B</td><td>812 B</td><td>93 B</td><td>39.6%</td></tr>
+        <tr><td>ULTRA-126B</td><td>640 B</td><td>126 B</td><td>31.2%</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td>ZX0-v2</td><td>1024 B</td><td>67 B</td><td>50.0%</td></tr>
+        <tr><td>UNIV-93B</td><td>812 B</td><td>93 B</td><td>39.6%</td></tr>
+        <tr><td>ULTRA-126B</td><td>640 B</td><td>126 B</td><td>31.2%</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td>ZX0-v2</td><td>1024 B</td><td>67 B</td><td>50.0%</td></tr>
+        <tr><td>UNIV-93B</td><td>812 B</td><td>93 B</td><td>39.6%</td></tr>
+        <tr><td>ULTRA-126B</td><td>640 B</td><td>126 B</td><td>31.2%</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td>ZX0-v2</td><td>1024 B</td><td>67 B</td><td>50.0%</td></tr>
+        <tr><td>UNIV-93B</td><td>812 B</td><td>93 B</td><td>39.6%</td></tr>
+        <tr><td>ULTRA-126B</td><td>640 B</td><td>126 B</td><td>31.2%</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr><td>ZX0-v2</td><td>1024 B</td><td>67 B</td><td>50.0%</td></tr>
+        <tr><td>UNIV-93B</td><td>812 B</td><td>93 B</td><td>39.6%</td></tr>
+        <tr><td>ULTRA-126B</td><td>640 B</td><td>126 B</td><td>31.2%</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<div class="metric-card" data-format="zx0-ultra">
+  <header><h3 class="title">Compression Benchmark Report</h3></header>
+  <section class="body">
+    <table class="results-table">
+      <thead><tr><th>Codec</th><th>Compressed</th><th>Decoder<

@@ -1,0 +1,79 @@
+/*
+ * ultra_engine.c - Exact Unpruned Multi-State Automaton DP, Bitstream Encoder,
+ *                  OpenMP Transform Search, and In-Memory Self-Verifier.
+ *
+ * Based on the ZX0 compression engine by Einar Saukas (c) 2021 (BSD 3-Clause).
+ * Exact Pareto-frontier optimal parser, wildcard materialization, and multi-core
+ * Stride-Delta / Adaptive-k optimizations by Oleksandr Dreval (MIT License).
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "zx0_ultra.h"
+
+#include <assert.h>
+#include <limits.h>
+#ifdef _OPENMP
+#include <omp.h>
+#else
+static inline int omp_in_parallel(void) { return 0; }
+#endif
+#include <stdlib.h>
+#include <string.h>
+
+#define COST_INFINITY               0x3fffffff
+#define EXACT_FRONTIER_CAPACITY     32
+#define INITIAL_NODE_POOL_CAPACITY  65536
+#define NODE_POOL_GC_THRESHOLD      (2 * 1024 * 1024)
+#define EOF_CONTROL_AND_ELIAS_BITS  18
+#define FILTER_WORD_BYTES           2
+#define ADPK_HEADER_BYTES           1
+#define MAX_ADPK_LSB_BITS           12
+#define MIN_MATCH_LENGTH_NEW_OFFSET 2
+#define X86_OPCODE_CALL_REL16       0xE8
+#define X86_OPCODE_JMP_REL16        0xE9
+
+typedef struct {
+    int prev_node;
+    int end_pos;
+    int offset; /* 0 denotes a Literal run; > 0 denotes a Match with this offset */
+} ParseNode;
+
+typedef struct {
+    ParseNode *nodes;
+    int count;
+    int capacity;
+} NodePool;
+
+typedef struct {
+    int pos;
+    int base_cost;
+    int node_idx;
+} FrontierEntry;
+
+/* Cache-line aligned layout: count + entries[0..4] reside in a single 64-byte cache line */
+typedef struct {
+    int count;
+    FrontierEntry entries[EXACT_FRONTIER_CAPACITY];
+} MonotonicFrontier;
+
+typedef struct {
+    int end_pos;
+    int length;
+    int offset; /* 0 = Literal, > 0 = Match */
+} Token;
+
+static inline int compute_elias_gamma_bits(int value) {
+    assert(value >= 1);
+#if defined(__GNUC__) || defined(__clang__)
+    return 1 + 2 * (31 - __builtin_clz((unsigned int)value));
+#else
+    int bits = 1;
+    while (value >>= 1) {
+        bits += 2;
+    }
+    return bits;
+#endif
+}
+
+static inline int compute_new_of

@@ -1,0 +1,43 @@
+;; Canterbury Corpus Symbolic Grammar & Parser Rules
+(define (make-grammar-rule lhs rhs-list weight)
+  (list 'rule (cons 'lhs lhs) (cons 'rhs rhs-list) (cons 'weight weight)))
+
+(define (evaluate-production-cost state symbol-table offset-bits)
+  (let ((base-cost (lookup-state-cost state symbol-table))
+        (elias-len (compute-elias-gamma-bits (state-run-length state))))
+    (+ base-cost elias-len offset-bits)))
+
+(define rule-production-01
+  (make-grammar-rule 'non-terminal-01
+    '(terminal-alpha-01 non-terminal-02 terminal-beta-01)
+    10))
+(define rule-production-02
+  (make-grammar-rule 'non-terminal-02
+    '(terminal-alpha-02 non-terminal-03 terminal-beta-02)
+    17))
+(define rule-production-03
+  (make-grammar-rule 'non-terminal-03
+    '(terminal-alpha-03 non-terminal-04 terminal-beta-03)
+    24))
+(define rule-production-04
+  (make-grammar-rule 'non-terminal-04
+    '(terminal-alpha-04 non-terminal-05 terminal-beta-04)
+    31))
+(define rule-production-05
+  (make-grammar-rule 'non-terminal-05
+    '(terminal-alpha-00 non-terminal-06 terminal-beta-05)
+    38))
+(define rule-production-06
+  (make-grammar-rule 'non-terminal-06
+    '(terminal-alpha-01 non-terminal-07 terminal-beta-06)
+    45))
+(define rule-production-07
+  (make-grammar-rule 'non-terminal-07
+    '(terminal-alpha-02 non-terminal-08 terminal-beta-00)
+    52))
+(define rule-production-08
+  (make-grammar-rule 'non-terminal-08
+    '(terminal-alpha-03 non-terminal-09 terminal-beta-01)
+    59))
+(define rule-production-09
+  (make-grammar-rule 'non-terminal-

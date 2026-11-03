@@ -1,0 +1,348 @@
+ALICE\'S ADVENTURES IN WONDERLAND\
+\
+ Lewis Carroll\
+\
+ THE MILLENNIUM FULCRUM EDITION 2.9\
+\
+ CHAPTER I\
+\
+ Down the Rabbit-Hole\
+\
+ Alice was beginning to get very tired of sitting by her sister\
+\
+ on the bank, and of having nothing to do: once or twice she had\
+\
+ peeped into the book her sister was reading, but it had no\
+\
+ pictures or conversations in it, `and what is the use of a book,\'\
+\
+ thought Alice `without pictures or conversation?\'\
+\
+ So she was considering in her own mind (as well as she could,\
+\
+ for the hot day made her feel very sleepy and stupid), whether\
+\
+ the pleasure of making a daisy-chain would be worth the trouble\
+\
+ of getting up and picking the daisies, when suddenly a White\
+\
+ Rabbit with pink eyes ran close by her.\
+\
+ There was nothing so VERY remarkable in that; nor did Alice\
+\
+ think it so VERY much out of the way to hear the Rabbit say to\
+\
+ itself, `Oh dear! Oh dear! I shall be late!\' (when she thought\
+\
+ it over afterwards, it occurred to her that she ought to have\
+\
+ wondered at this, but at the time it all seemed quite natural);\
+\
+ but when the Rabbit actually TOOK A WATCH OUT OF ITS WAISTCOAT-\
+\
+ POCKET, and looked at it, and then hurried on, Alice started to\
+\
+ her feet, for it flashed across her mind that she had never\
+\
+ before seen a rabbit with either a waistcoat-pocket, or a watch to\
+\
+ take out of it, and burning with curiosity, she ran across the\
+\
+ field after it, and fortunately was just in time to see it pop\
+\
+ down a large rabbit-hole under the hedge.\
+\
+ In another moment down went Alice after it, never once\
+\
+ considering how in the world she was to get out again.\
+\
+ The rabbit-hole went straight on like a tunnel for some way,\
+\
+ and then dipped suddenly down, so suddenly that Alice had not a\
+\
+ moment to think about stopping herself before she found herself\
+\
+ falling down a very deep well.\
+\
+ Either the well was very deep, or she fell very slowly, for she\
+\
+ had plenty of time as she went down to look about her and to\
+\
+ wonder what was going to happen next. First, she tried to look\
+\
+ down and make out what she was coming to, but it was too dark to\
+\
+ see anything; then she looked at the sides of the well, and\
+\
+ noticed that they were filled with cupboards and book-shelves;\
+\
+ here and there she saw maps and pictures hung upon pegs. She\
+\
+ took down a jar from one of the shelves as she passed; it was\
+\
+ labelled `ORANGE MARMALADE\', but to her great disappointment it\
+\
+ was empty: she did not like to drop the jar for fear of killing\
+\
+ somebody, so managed to put it into one of the cupboards as she\
+\
+ fell past it.\
+\
+ `Well!\' thought Alice to herself, `after such a fall as this, I\
+\
+ shall think nothing of tumbling down stairs! How brave they\'ll\
+\
+ all think me at home! Why, I wouldn\'t say anything about it,\
+\
+ even if I fell off the top of the house!\' (Which was very likely\
+\
+ true.)\
+\
+ Down, down, down. Would the fall NEVER come to an end! `I\
+\
+ wonder how many miles I\'ve fallen by this time?\' she said aloud.\
+\
+ `I must be getting somewhere near the centre of the earth. Let\
+\
+ me see: that would be four thousand miles down, I think--\' (for,\
+\
+ you see, Alice had learnt several things of this sort in her\
+\
+ lessons in the schoolroom, and though this was not a VERY good\
+\
+ opportunity for showing off her knowledge, as there was no one to\
+\
+ listen to her, still it was good practice to say it over) `--yes,\
+\
+ that\'s about the right distance--but then I wonder what Latitude\
+\
+ or Longitude I\'ve got to?\' (Alice had no idea what Latitude was,\
+\
+ or Longitude either, but thought they were nice grand words to\
+\
+ say.)\
+\
+ Presently she began again. `I wonder if I shall fall right\
+\
+ THROUGH the earth! How funny it\'ll seem to come out among the\
+\
+ people that walk with their heads downward! The Antipathies, I\
+\
+ think--\' (she was rather glad there WAS no one listening, this\
+\
+ time, as it didn\'t sound at all the right word) `--but I shall\
+\
+ have to ask them what the name of the country is, you know./*
+ * ultra_engine.c - Exact Unpruned Multi-State Automaton DP, Bitstream Encoder,
+ *                  OpenMP Transform Search, and In-Memory Self-Verifier.
+ *
+ * Based on the ZX0 compression engine by Einar Saukas (c) 2021 (BSD 3-Clause).
+ * Exact Pareto-frontier optimal parser, wildcard materialization, and multi-core
+ * Stride-Delta / Adaptive-k optimizations by Oleksandr Dreval (MIT License).
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "zx0_ultra.h"
+
+#include <assert.h>
+#include <limits.h>
+#ifdef _OPENMP
+#include <omp.h>
+#else
+static inline int omp_in_parallel(void) { return 0; }
+#endif
+#include <stdlib.h>
+#include <string.h>
+
+#define COST_INFINITY               0x3fffffff
+#define EXACT_FRONTIER_CAPACITY     32
+#define INITIAL_NODE_POOL_CAPACITY  65536
+#define NODE_POOL_GC_THRESHOLD      (2 * 1024 * 1024)
+#define EOF_CONTROL_AND_ELIAS_BITS  18
+#define FILTER_WORD_BYTES           2
+#define ADPK_HEADER_BYTES           1
+#define MAX_ADPK_LSB_BITS           12
+#define MIN_MATCH_LENGTH_NEW_OFFSET 2
+#define X86_OPCODE_CALL_REL16       0xE8
+#define X86_OPCODE_JMP_REL16        0xE9
+
+typedef struct {
+    int prev_node;
+    int end_pos;
+    int offset; /* 0 denotes a Literal run; > 0 denotes a Match with this offset */
+} ParseNode;
+
+typedef struct {
+    ParseNode *nodes;
+    int count;
+    int capacity;
+} NodePool;
+
+typedef struct {
+    int pos;
+    int base_cost;
+    int node_idx;
+} FrontierEntry;
+
+/* Cache-line aligned layout: count + entries[0..4] reside in a single 64-byte cache line */
+typedef struct {
+    int count;
+    FrontierEntry entries[EXACT_FRONTIER_CAPACITY];
+} MonotonicFrontier;
+
+typedef struct {
+    int end_pos;
+    int length;
+    int offset; /* 0 = Literal, > 0 = Match */
+} Token;
+
+static inline int compute_elias_gamma_bits(int value) {
+    assert(value >= 1);
+#if defined(__GNUC__) || defined(__clang__)
+    return 1 + 2 * (31 - __builtin_clz((unsigned int)value));
+#else
+    int bits = 1;
+    while (value >>= 1) {
+        bits += 2;
+    }
+    return bits;
+#endif
+}
+
+static inline int compute_new_offset_overhead_bits(int offset, int offset_lsb_bits) {
+    int msb_group = ((offset - 1) >> offset_lsb_bits) + 1;
+    return 1 + compute_elias_gamma_bits(msb_group) + offset_lsb_bits;
+}
+
+static void node_pool_init(NodePool *pool, int initial_capacity) {
+    pool->capacity = initial_capacity > 0 ? initial_capacity : INITIAL_NODE_POOL_CAPACITY;
+    pool->count = 0;
+    pool->nodes = (ParseNode *)malloc((size_t)pool->capacity * sizeof(ParseNode));
+    assert(pool->nodes != NULL);
+}
+
+static void node_pool_free(NodePool *pool) {
+    free(pool->nodes);
+    pool->nodes = NULL;
+    pool->count = 0;
+    pool->capacity = 0;
+}
+
+static int node_pool_push(NodePool *pool, int prev_node, int end_pos, int offset) {
+    if (pool->count >= pool->capacity) {
+        pool->capacity *= 2;
+        pool->nodes = (ParseNode *)realloc(pool->nodes, (size_t)pool->capacity * sizeof(ParseNode));
+        assert(pool->nodes != NULL);
+    }
+    int idx = pool->count++;
+    pool->nodes[idx].prev_node = prev_node;
+    pool->nodes[idx].end_pos = end_pos;
+    pool->nodes[idx].offset = offset;
+    return idx;
+}
+
+/*
+ * Exact O(Live) Topological Mark-and-Compact Garbage Collector for NodePool.
+ * Reclaims dead ParseNodes displaced from monotonic frontiers, bounding per-thread memory to ~24 MB
+ * even on highly repetitive 64 KB files across 16 simultaneous OpenMP threads.
+ */
+static void node_pool_compact(
+    NodePool *pool,
+    int *best_any_node,
+    int upto_pos,
+    MonotonicFrontier *lit_frontiers,
+    MonotonicFrontier *rep_frontiers,
+    const uint8_t *rep_nonempty,
+    int max_window
+) {
+    if (pool->count == 0) {
+        return;
+    }
+    int *remap = (int *)malloc((size_t)pool->count * sizeof(int));
+    assert(remap != NULL);
+    for (int i = 0; i < pool->count; i++) {
+        remap[i] = -1;
+    }
+
+    for (int p = 1; p <= upto_pos; p++) {
+        int nid = best_any_node[p];
+        if (nid >= 0) {
+            remap[nid] = 1;
+        }
+    }
+    for (int off = 0; off <= max_window; off++) {
+        int lc = lit_frontiers[off].count;
+        U‰åè¶]Ã1ÀéÎÃU‰åèæ]Ã‹FØ‰FU‰åèv]Ã‹FØ‰FU‰åèæ]Ã1ÀéÃU‰åèv]Ã‹FØ‰FU‰åè&]Ã‹FØ‰FU‰åèV]Ã1ÀénÃU‰åè†]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè†]Ã1Àé>ÃU‰åè]Ã‹FØ‰FU‰åèÆ]Ã‹FØ‰FU‰åèö]Ã1ÀéÃU‰åè&]Ã‹FØ‰FU‰åè¶]Ã‹FØ‰FU‰åè&]Ã1ÀéŞÃU‰åè¶]Ã‹FØ‰FU‰åèf]Ã‹FØ‰FU‰åè–]Ã1Àé®ÃU‰åèÆ]Ã‹FØ‰FU‰åèV]Ã‹FØ‰FU‰åèÆ]Ã1Àé~ÃU‰åèV]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè6]Ã1ÀéNÃU‰åèf]Ã‹FØ‰FU‰åèö]Ã‹FØ‰FU‰åèf]Ã1ÀéÃU‰åèö]Ã‹FØ‰FU‰åè¦]Ã‹FØ‰FU‰åèÖ]Ã1ÀéîÃU‰åè]Ã‹FØ‰FU‰åè–]Ã‹FØ‰FU‰åè]Ã1Àé¾ÃU‰åè–]Ã‹FØ‰FU‰åèF]Ã‹FØ‰FU‰åèv]Ã1ÀéÃU‰åè¦]Ã‹FØ‰FU‰åè6]Ã‹FØ‰FU‰åè¦]Ã1Àé^ÃU‰åè6]Ã‹FØ‰FU‰åèæ]Ã‹FØ‰FU‰åè]Ã1Àé.ÃU‰åèF]Ã‹FØ‰FU‰åèÖ]Ã‹FØ‰FU‰åèF]Ã1ÀéşÃU‰åèÖ]Ã‹FØ‰FU‰åè†]Ã‹FØ‰FU‰åè¶]Ã1ÀéÎÃU‰åèæ]Ã‹FØ‰FU‰åèv]Ã‹FØ‰FU‰åèæ]Ã1ÀéÃU‰åèv]Ã‹FØ‰FU‰åè&]Ã‹FØ‰FU‰åèV]Ã1ÀénÃU‰åè†]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè†]Ã1Àé>ÃU‰åè]Ã‹FØ‰FU‰åèÆ]Ã‹FØ‰FU‰åèö ]Ã1ÀéÃU‰åè&]Ã‹FØ‰FU‰åè¶]Ã‹FØ‰FU‰åè&]Ã1ÀéŞ ÃU‰åè¶]Ã1ÀéÎÃU‰åèæ]Ã‹FØ‰FU‰åèv]Ã‹FØ‰FU‰åèæ]Ã1ÀéÃU‰åèv]Ã‹FØ‰FU‰åè&]Ã‹FØ‰FU‰åèV]Ã1ÀénÃU‰åè†]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè†]Ã1Àé>ÃU‰åè]Ã‹FØ‰FU‰åèÆ]Ã‹FØ‰FU‰åèö]Ã1ÀéÃU‰åè&]Ã‹FØ‰FU‰åè¶]Ã‹FØ‰FU‰åè&]Ã1ÀéŞÃU‰åè¶]Ã‹FØ‰FU‰åèf]Ã‹FØ‰FU‰åè–]Ã1Àé®ÃU‰åèÆ]Ã‹FØ‰FU‰åèV]Ã‹FØ‰FU‰åèÆ]Ã1Àé~ÃU‰åèV]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè6]Ã1ÀéNÃU‰åèf]Ã‹FØ‰FU‰åèö]Ã‹FØ‰FU‰åèf]Ã1ÀéÃU‰åèö]Ã‹FØ‰FU‰åè¦]Ã‹FØ‰FU‰åèÖ]Ã1ÀéîÃU‰åè]Ã‹FØ‰FU‰åè–]Ã‹FØ‰FU‰åè]Ã1Àé¾ÃU‰åè–]Ã‹FØ‰FU‰åèF]Ã‹FØ‰FU‰åèv]Ã1ÀéÃU‰åè¦]Ã‹FØ‰FU‰åè6]Ã‹FØ‰FU‰åè¦]Ã1Àé^ÃU‰åè6]Ã‹FØ‰FU‰åèæ]Ã‹FØ‰FU‰åè]Ã1Àé.ÃU‰åèF]Ã‹FØ‰FU‰åèÖ]Ã‹FØ‰FU‰åèF]Ã1ÀéşÃU‰åèÖ]Ã‹FØ‰FU‰åè†]Ã‹FØ‰FU‰åè¶]Ã1ÀéÎÃU‰åèæ]Ã‹FØ‰FU‰åèv]Ã‹FØ‰FU‰åèæ]Ã1ÀéÃU‰åèv]Ã‹FØ‰FU‰åè&]Ã‹FØ‰FU‰åèV]Ã1ÀénÃU‰åè†]Ã‹FØ‰FU‰åè]Ã‹FØ‰FU‰åè†]Ã1Àé>ÃU‰åè]Ã‹FØ‰FU‰åèÆ]Ã‹FØ‰FU‰åèö ]Ã1ÀéÃU‰åè&]Ã‹FØ‰FU‰åè¶]Ã‹FØ‰FU‰åè&]Ã1ÀéŞ Ã 	!$(,048<
+#).4:
+"%)-159=$*/5;#&*.26:> %+06<	 $'+/37;?!&,17=
+!%(,048< 	"'-28>	"&)-159=
+#(.39?
+ #'*.26:>$)/4: 	!$(+/37;? %*05;
+"%),048< 	!&+16<	 #&*-159=
+"',27=
+!$'+.26:>#(-38>"%(,/37;?$).49? #&)-048<  %*/5: !$'*.159=	!&+06;"%(+/26:>
+"',17< #&),037;?#(-28=	!$'*-148< $).39>
+"%(+.259=	 %*/4:? #&),/36:>
+!&+05; !$'*-047;?"',16<"%(+.158< #(-27= #&),/269=	$).38>	!$'*-037:>
+ %*/49?
+ "%(+.148;?!&+05: !#&),/259< "',16;"$'*-036:=	#(-27< #%(+.147;>
+$).38=!$&),/258<? %*/49>	 "%'*-0369= !&+05:?
+!#&(+.147:>	"',16;  "$'),/258;?
+#(-27<!#%(*-0369<  $).38= "$&)+.147:=!%*/49>	!#%'*,/258;>	"&+05:?
+"$&(+-0369<?
+#',16; #%'),.147:= $(-27<$&(*-/258;> %).38=%')+.0369<?	!&*/49>&(*,/147:= 
+"'+05:?	 ')+-0258;>#(,16; 
+!(*,.1369<?	 $)-27<")+-/247:= 
+!%*.38=#*,.0358;>"&+/49>$+-/1469<?#',05:?	%,.0257:= 	 $(-16; 
+ &-/1368;>
+!%).27<!'.02479<?"&*/38="(/1358:= 	#'+049>#)02469;>
+ $(,15:?	$*1357:<?!%)-26; 
+%+2468;= 	"&*.37< &,3579<>
+#'+/48=!'-468:=? $(,059>"(.579;> 	!%)-16:?	#)/68:<?
+"&*.27; 
+$*079;= #'+/38< %+18:<>	 $(,049=!&,29;=?
+!%)-15:>"'-3:<> "&*.26;?	#(.4;=?	#'+/37< 
+$)/5<> 
+ $(,048=%*06=?!%)-159> &+17> 	"&*.26:?!',28?
+ #'+/37; 	"(-39 @@1@J@d@~@™@´@Ğ@ì@	A&ADAbAA AÀAàAB"BDBfB‰B¬BĞBôBC>CdCŠC±CØC D(DQDzD¤DÎDùD$EPE|E©EÖEF2FaFFÀFğF!GRG„G¶GéGHPH„H¹HîH$IZI‘IÈI J8JqJªJäJKYK”KĞKLIL†LÄLMAM€MÀM NAN‚NÄNOIOŒOĞOPYPPäP*QqQ¸Q RHR‘RÚR$SnS¹STPTœTéT6U„UÒU!VpVÀVWaW²WXVX©XüXPY¤YùYNZ¤ZúZQ[¨[ \X\±\
+]d]¾]^t^Ğ^,_‰_æ_D`¢`a`aÀa bbâbDc¦c	dldĞd4e™eşedfÊf1g˜g hhhÑh:i¤ijyjäjPk¼k)l–lmrmámPnÀn0o¡op„pöpiqÜqPrÄr9s®s$tštuˆu vxvñvjwäw^xÙxTyĞyLzÉzF{Ä{B|Á|@}À}@~Á~BÄF€É€LĞT‚Ù‚^ƒäƒj„ñ„x… †ˆ†‡š‡$ˆ®ˆ9‰Ä‰PŠÜŠi‹ö‹„Œ¡0ÀPár‘–‘)’¼’P“ä“y”•¤•:–Ñ–h— ˜˜˜1™Ê™dšşš™›4œĞœl	¦DŸâŸ  ¡À¡`¢£¢£D¤æ¤‰¥,¦Ğ¦t§¨¾¨d©
+ª±ªX« ¬¨¬Q­ú­¤®N¯ù¯¤°P±ü±©²V³´²´aµ¶À¶p·!¸Ò¸„¹6ºéºœ»P¼½¹½n¾$¿Ú¿‘ÀHÁ Â¸ÂqÃ*ÄäÄÅYÆÇĞÇŒÈIÉÊÄÊ‚ËAÌ ÍÀÍ€ÎAÏĞÄĞ†ÑIÒÓĞÓ”ÔYÕÖäÖª×qØ8Ù ÚÈÚ‘ÛZÜ$İîİ¹Ş„ßPàáéá¶â„ãRä!åğåÀæçaè2éêÖê©ë|ìPí$îùîÎï¤ğzñQò(ó ôØô±õŠöd÷>øùôùĞú¬û‰üfıDş"ÿ à À bD&	ìĞ´	™
+~dJ1 èÑº¤ydP<)òáĞÀ°¡ ’!„"v#i$\%P&D'9(.)$*+,- .ø.ñ/ê0ä1Ş2Ù3Ô4Ğ5Ì6É7Æ8Ä9Â:Á;À<À=À>Á?Â@ÄAÆBÉCÌDĞEÔFÙGŞHäIêJñKøL NOPQ$R.S9TDUPV\WiXvY„Z’[¡\°]À^Ğ_á`òacd)e<fPgdhyij¤kºlÑmèn @@1@J@d@~@™@´@Ğ@ì@	A&ADAbAA AÀAàAB"BDBfB‰B¬BĞBôBC>CdCŠC±CØC D(DQDzD¤DÎDùD$EPE|E©EÖEF2FaFFÀFğF!GRG„G¶GéGHPH„H¹HîH$IZI‘IÈI J8JqJªJäJKYK”KĞKLIL†LÄLMAM€MÀM NAN‚NÄNOIOŒOĞOPYPPäP*QqQ¸Q RHR‘RÚR$SnS¹STPTœTéT6U„UÒU!VpVÀVWaW²WXVX©XüXPY¤YùYNZ¤ZúZQ[¨[ \X\±\
+]d]¾]^t^Ğ^,_‰_æ_D`¢`a`aÀa bbâbDc¦c	dldĞd4e™eşedfÊf1g˜g hhhÑh:i¤ijyjäjPk¼k)l–lmrmámPnÀn0o¡op„pöpiqÜqPrÄr9s®s$tštuˆu vxvñvjwäw^xÙxTyĞyLzÉzF{Ä{B|Á|@}À}@~Á~BÄF€É€LĞT‚Ù‚^ƒäƒj„ñ„x… †ˆ†‡š‡$ˆ®ˆ9‰Ä‰PŠÜŠi‹ö‹„Œ¡0ÀPár‘–‘)’¼’P“ä“y”•¤•:–Ñ–h— ˜˜˜1™Ê™dšşš™›4œĞœl	¦DŸâŸ  ¡À¡`¢£¢£D¤æ¤‰¥,¦Ğ¦t§¨¾¨d©
+ª±ªX« ¬¨¬Q­ú­¤®N¯ù¯¤°P±ü±©²V³´²´aµ¶À¶p·!¸Ò¸„¹6ºéºœ»P¼½¹½n¾$¿Ú¿‘ÀHÁ Â¸ÂqÃ*ÄäÄÅYÆÇĞÇŒÈIÉÊÄÊ‚ËAÌ ÍÀÍ€ÎAÏĞÄĞ†ÑIÒÓĞÓ”ÔYÕÖäÖª×qØ8Ù ÚÈÚ‘ÛZÜ$İîİ¹Ş„ßPàáéá¶â„ãRä!åğåÀæçaè2éêÖê©ë|ìPí$îùîÎï¤ğzñQò(ó ôØô±õŠöd÷>øùôùĞú¬û‰üfıDş"ÿ à À bD&	ìĞ´	™
+~dJ1 èÑº¤ydP<)òáĞÀ°¡ ’!„"v#i$\%P&D'9(.)$*+,- .ø.ñ/ê0ä1Ş2Ù3Ô4Ğ5Ì6É7Æ8Ä9Â:Á;À<À=À>Á?Â@ÄAÆBÉCÌDĞEÔFÙGŞHäIêJñKøL NOPQ$R.S9TDUPV\WiXvY„Z’[¡\°]À^Ğ_á`òacd)e<fPgdhyij¤kºlÑmènèĞôôØøáüê ô0şB	Th |,"’9(¨F/ÀT6Øb=òqD€L(TD \b±d€Âm ÔvÀæâùˆ	’( 	œL4	¦rI	°˜^	»Àt	ÆèŠ	Ñ¡	Ü<¸	èhĞ	ô”è	 Â
+ğ
+ 4
+&PN
+3‚i
+@´„
+Nè 
+\	¼
+jR	Ù
+xˆ	ö
+‡À	–ø	2¥2
+Q´l
+pÄ¨
+Ôä
+°ä"Ñô`ò à6'"Y8d|J¨ \ìÄn2é€x“À4¦Z¹RÌœ¨àèĞô4ø‚!ĞJ1 tFp[ÂÉpô†h œ¼L²yÈh¦ßÀÔör1$Ì`<(T„Àlâñ„@" T¶ †Ïb¹èÄì( ŒT6ò‰PX¾kÀô†(*¡’a¼ü˜ØhĞôÔBA,°zI ´fîƒ) td¾è Ü\ÜúÒ	HV7	À”V	8 Òu	² ”	,!P´	¨!Ô	$"Ğô	¢"
+ #R5
+ #”V
+ $Öw
+¢$˜
+$%\º
+¨% Ü
+,&äş
+²&) 8'nCÀ'´fH(ú‰Ò(A¬\)ˆĞè)Ğôt*+a<+ªa ,ô†°,>«B-‰ĞÔ-Ôöh. ü.lB’/¹h(0À0T¶X1¢İò1ñŒ2@ ,(3 TÄ3à |b41!¤ 5‚!Í 5Ô!ö@6&"â6y"H„7Ì"r(8 #œÌ8t#Ær9É#ğ:$À:t$Fh;Ê$q<!%œ¼<x%Èh=Ğ%ô>(& Â>&Lp?Ú&y @4'¦Ğ@'Ó‚Aé' 4BD(.èB (\œCü(ŠRDY)¸E¶)çÀE*xFr*E2GÑ*tìG0+¤¨H+ÔdIğ+"JQ,4àJ²,e K-–`Lv-Ç"MÙ-øäM<.*¨N .\lO/2Pi/ÀøPÎ/óÀQ40&ˆRš0YRS1ŒTh1ÀèTĞ1ô´U82(‚V¡2\PW
+3‘ Xt3ÆğXŞ3ûÂYI40”Z´4fh[ 5œ<\Œ5Ò]ù5è]f6?À^Ô6v˜_B7­r`±7äLa 8(b8Tc 9Œâcq9ÄÀdâ9ı eT:6€fÆ:obg9;¨Dh¬;â(i <j”<Vòj	=Øk~=ËÀlô=¨mj>A’ná>||oX?¸hpĞ?ôTqH@0BrÁ@l0s:A© t´Aæu.B#v©B`ôv$Cèw CÜÜxD Òy™DX ÈzE— À{”EÖ ¸|F!²}‘FT!¬~G”!¨GÔ!¤€H"¢‘HT" ‚I•" ƒ”IÖ" „J#¢…™JX#¤†Kš#¨‡ KÜ#¬ˆ$L$²‰©L`$¸Š.M£$À‹´Mæ$ÈŒ:N)%ÒÁNl%ÜHO°%    	 	
+
+	
+ !"#	$	%	&	'
+(
+)
+*
++,-./ 0 1!2!3"4"5#6#7$8$9%:%;&<&='>'?( ())**++,,	-
+-..//00112233445566778 8!9"9#:$:%;&;'<(<)=*=+>,>-?.?/ 0 123456789:;<=>?    	 	!
+!
+!!""	"
+"####$$$$%%%%&&&&''''( (!("(#)$)%)&)'*(*)*

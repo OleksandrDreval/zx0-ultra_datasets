@@ -1,0 +1,136 @@
+/*
+ * sprite_solver.c - Multi-Core Multi-Asset Superstring, Partial/Maximal Boundary Overlap,
+ *                   Substring Containment, and Wildcard-Bridge Optimizer.
+ *
+ * Author & Implementation: Oleksandr Dreval (MIT License).
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "zx0_ultra.h"
+
+#include <assert.h>
+#ifdef _OPENMP
+#include <omp.h>
+#else
+static inline int omp_in_parallel(void) { return 0; }
+#endif
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_PACK_ASSETS                 14
+#define EXACT_FACTORIAL_ASSET_LIMIT     8
+#define MAX_HEURISTIC_PERMUTATIONS      768
+#define ELITE_BYTE_SLACK                4
+#define MAX_ELITE_PERMUTATIONS          256
+#define MAX_WILDCARD_BRIDGE_LEN         4
+
+static int compute_max_overlap(const UltraAsset *left, const UltraAsset *right) {
+    int limit = left->length < right->length ? left->length : right->length;
+    /* Do not merge completely here; full containment is handled separately */
+    if (limit == right->length && left->length == right->length) {
+        limit--;
+    }
+    for (int ov = limit; ov >= 1; ov--) {
+        if (memcmp(left->data + left->length - ov, right->data, (size_t)ov) == 0) {
+            return ov;
+        }
+    }
+    return 0;
+}
+
+static int find_contained_offset(const UltraAsset *haystack, const UltraAsset *needle) {
+    if (needle->length > haystack->length) {
+        return -1;
+    }
+    int max_start = haystack->length - needle->length;
+    for (int pos = 0; pos <= max_start; pos++) {
+        if (memcmp(haystack->data + pos, needle->data, (size_t)needle->length) == 0) {
+            return pos;
+        }
+    }
+    return -1;
+}
+
+/*
+ * Gap specification between consecutive active assets:
+ *   gap_spec >= 0 : suffix-prefix overlap of gap_spec bytes (0 = direct concatenation)
+ *   gap_spec <  0 : insert (-gap_spec) flexible wildcard bridge bytes between the two assets
+ */
+static int build_candidate_buffer(
+    const UltraAsset *assets,
+    const int *active_perm,
+    int active_count,
+    const int *gap_specs,
+    uint8_t *raw_out,
+    uint8_t *wildcard_out,
+    int *active_offsets_out
+) {
+    int cursor = 0;
+    for (int idx = 0; idx < active_count; idx++) {
+        const UltraAsset *cur = &assets[active_perm[idx]];
+        if (idx == 0) {
+            active_offsets_out[idx] = 0;
+            memcpy(raw_out, cur->data, (size_t)cur->length);
+            memset(wildcard_out, 0, (size_t)cur->length);
+            cursor = cur->length;
+        } else {
+            int spec = gap_specs[idx - 1];
+            if (spec >= 0) {
+                int ov = spec;
+                active_offsets_out[idx] = cursor - ov;
+                int tail_len = cur->length - ov;
+                if (tail_len > 0) {
+                    memcpy(raw_out + cursor, cur->data + ov, (size_t)tail_len);
+                    memset(wildcard_out + cursor, 0, (size_t)tail_len);
+                    cursor += tail_len;
+                }
+            } else {
+                int bridge_len = -spec;
+                memset(raw_out + cursor, 0, (size_t)bridge_len);
+                memset(wildcard_out + cursor, 1, (size_t)bridge_len);
+                cursor += bridge_len;
+                active_offsets_out[idx] = cursor;
+                memcpy(raw_out + cursor, cur->data, (size_t)cur->length);
+                memset(wildcard_out + cursor, 0, (size_t)cur->length);
+                cursor += cur->length;
+            }
+        }
+    }
+    return cursor;
+}
+
+static int next_lexicographic_permutation(int *arr, int n) {
+    int i = n - 2;
+    while (i >= 0 && arr[i] >= arr[i + 1]) {
+        i--;
+    }
+    if (i < 0) {
+        return 0;
+    }
+    int j = n - 1;
+    while (arr[j] <= arr[i]) {
+        j--;
+    }
+    int tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+
+    int left = i + 1;
+    int right = n - 1;
+    while (left < right) {
+        tmp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = tmp;
+        left++;
+        right--;
+    }
+    return 1;
+}
+
+typedef struct {
+    int perm[MAX_PACK_ASSETS];
+    size_t best_bytes;
+    int best_bits;
+} PermScore;
+
+static void update_global_best(

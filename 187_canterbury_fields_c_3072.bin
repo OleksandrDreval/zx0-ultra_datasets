@@ -1,0 +1,98 @@
+ int flags, int maxf));
+				/* Read a line with fields from a file */
+field_t *	fieldmake P ((char * line, int allocated, char * delims,
+				  int flags, int maxf));
+				/* Make a field structure from a line */
+static field_t * fieldparse P ((field_t * fieldp, char * line, char * delims,
+				  int flags, int maxf));
+				/* Parse the fields in a line */
+static int	fieldbackch P ((char * str, char ** out, int strip));
+				/* Process backslash sequences */
+int		fieldwrite P ((FILE * file, field_t * fieldp, int delim));
+				/* Write a line with fields to a file */
+void		fieldfree P ((field_t * fieldp));
+				/* Free a field returned by fieldread */
+
+unsigned int	field_field_inc = 20; /* Increment to increase # fields by */
+unsigned int	field_line_inc = 512; /* Incr to increase line length by */
+
+#ifndef USG
+#define strchr	index
+#endif /* USG */
+
+extern void	free ();
+extern char *	malloc ();
+extern char *	realloc ();
+extern char *	strchr ();
+extern int	strlen ();
+
+/*
+ * Read one line of the given file into a buffer, break it up into
+ * fields, and return them to the caller.  The field_t structure
+ * returned must eventually be freed with fieldfree.
+ */
+field_t * fieldread (file, delims, flags, maxf)
+    FILE *		file;	/* File to read lines from */
+    char *		delims;	/* Characters to use for field delimiters */
+    int			flags;	/* Option flags;  see fields.h */
+    int			maxf;	/* Maximum number of fields to parse */
+    {
+    register char *	linebuf; /* Buffer to hold the line read in */
+    int			linemax; /* Maximum line buffer size */
+    int			linesize; /* Current line buffer size */
+
+    linebuf = (char *) malloc (field_line_inc);
+    if (linebuf == NULL)
+	return NULL;
+    linemax = field_line_inc;
+    linesize = 0;
+    /*
+     * Read in the line.
+     */
+    while (fgets (&linebuf[linesize], linemax - linesize, file)
+      != NULL)
+	{
+	linesize += strlen (&linebuf[linesize]);
+	if (linebuf[linesize - 1] == '\n')
+	    break;
+	else
+	    {
+	    linemax += field_line_inc;
+	    linebuf = (char *) realloc (linebuf, linemax);
+	    if (linebuf == NULL)
+		return NULL;
+	    }
+	}
+    if (linesize == 0)
+	{
+	free (linebuf);
+	return NULL;
+	}
+    return fieldmake (linebuf, 1, delims, flags, maxf);
+    }
+
+field_t * fieldmake (line, allocated, delims, flags, maxf)
+    char *		line;	/* Line to make into a field structure */
+    int			allocated; /* NZ if line allocated with malloc */
+    char *		delims;	/* Characters to use for field delimiters */
+    int			flags;	/* Option flags;  see fields.h */
+    int			maxf;	/* Maximum number of fields to parse */
+    {
+    register field_t *	fieldp;	/* Structure describing the fields */
+    int			linesize; /* Current line buffer size */
+
+    fieldp = (field_t *) malloc (sizeof (field_t));
+    if (fieldp == NULL)
+	return NULL;
+    fieldp->nfields = 0;
+    fieldp->linebuf = allocated ? line : NULL;
+    fieldp->fields = NULL;
+    fieldp->hadnl = 0;
+    linesize = strlen (line);
+    if (line[linesize - 1] == '\n')
+	{
+	line[--linesize] = '\0';
+	fieldp->hadnl = 1;
+	}
+    /*
+     * Shrink the line buffer i

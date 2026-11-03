@@ -1,0 +1,20 @@
+.EQ
+delim $$
+.EN
+.CH "1  WHY SPEECH OUTPUT?"
+.ds RT "Why speech output?
+.ds CX "Principles of computer speech
+.pp
+Speech is our everyday, informal, communication medium.  But although we use
+it a lot, we probably don't assimilate as much information through our
+ears as we do through our eyes, by reading or looking at pictures and diagrams.
+You go to a technical lecture to get the feel of a subject \(em the overall
+arrangement of ideas and the motivation behind them \(em and fill in the details,
+if you still want to know them, from a book.  You probably find out more about
+the news from ten minutes with a newspaper than from a ten-minute news broadcast.
+So it should be emphasized from the start that speech output from computers is
+not a panacea.  It doesn't solve the problems of communicating with computers;
+it simply enriches the possibilities for communication.
+.pp
+What, then, are the advantages of speech output?  One good reason for listening
+to a radio news broadcast instead of spending the time with a new

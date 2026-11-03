@@ -1,0 +1,38 @@
+.LB
+.NP
+can be used in the dark
+.NP
+can be varied from a (confidential) whisper to a (loud) shout
+.NP
+requires very little energy
+.NP
+is not appreciably affected by weightlessness or vibration.
+.LE
+However, these either derive from the three advantages we have discussed above,
+or relate
+mainly to exotic applications in space modules and divers' helmets.
+.pp
+Useful as it is at present, speech output would be even more attractive if it could
+be coupled with speech input.  In many ways, speech input is its "big brother".
+Many of the benefits of speech output are even more striking for speech input.
+Although people can assimilate information faster through the eyes than the
+ears, the majority of us can generate information faster with the mouth than
+with the hands.  Rapid typing is a relatively uncommon skill, and even high
+typing rates are much slower than speaking rates (although whether we can
+originate ideas quickly enough to keep up with fast speech is another matter!)  To
+take full advantage of the telephone for interaction with machines, machine
+recognition of speech is obviously necessary.  A microwave oven, calculator,
+pinball machine, or alarm clock that responds to spoken commands is certainly
+more attractive than one that just generates spoken status messages.  A book
+that told you how to recognize speech by machine would undoubtedly be more
+useful than one like this that just discusses how to synthesize it!  But the
+technology of speech recognition is nowhere near as advanced as that of
+synthesis \(em it's a much more difficult problem.  However, because speech input
+is obviously complementary to speech output, and even very limited input
+capabilities will greatly enhance many speech output systems, it is worth
+summarizing the present state of the art of speech recognition.
+.pp
+Commercial speech recognizers do exist.  Almost invariably, they accept
+words spoken in isolation, with gaps of silence between them, rather than
+connected utterances.
+It is not difficult to discriminate with high accuracy up to a

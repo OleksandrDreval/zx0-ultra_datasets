@@ -1,0 +1,38 @@
+ter networks or even stand-alone micros.
+.pp
+Although the potential has existed for decades, the possibility of the kind of
+``deviant'' software described here has been recognized only recently.
+Or has it?
+Probably some in the world of computer wizards and sorcerers have known for
+years how systems can be silently, subtly infiltrated \(em and concealed
+the information for fear that it might be misused (or for other reasons).
+But knowledge of the techniques is spreading nevertheless, and I believe it
+behooves us all \(em professionals and amateurs alike \(em to understand just
+how our continued successful use of computer systems hangs upon a thread of
+trust.
+Those who are ignorant of the possibilities of sabotage can easily be
+unknowingly duped by an unscrupulous infiltrator.
+.pp
+The moral is simple.
+Computer security is a human business.
+One way of maintaining security is to keep things secret, trusting people
+(the very people who can do you most harm) not to tell.
+The alternative is to open up the system and rely on technical means
+of ensuring security.
+But a system which is really ``open'' is also open to abuse.
+The more sharing and productive the environment, the more potential exists for
+damage.
+You have to trust your fellow users, and educate yourself.
+If mutual trust is the cornerstone of computer security, we'd better know it!
+.sh "The trend towards openness"
+.pp
+Many people believe that computer systems can maintain security not
+by keeping secrets but by clever technical mechanisms.
+Such devices include electronic locks and keys, and schemes for maintaining
+different sets of ``permissions'' or ``privileges'' for each user.
+The epitome of this trend towards open systems is the well-known \s-2UNIX\s+2
+operating system, whose developers, Dennis Ritchie and Ken Thompson, strove
+to design a clean, elegant piece of software that could be understood,
+maintained, and modified by users.
+(In 1983 they received the prestigious ACM Turing Award for their work.)  \c
+Ken Thompson has been one of the prime contributors 

@@ -1,0 +1,46 @@
+#! rnews 1312
+Path: alberta!mnetor!uunet!mcvax!ukc!dcl-cs!strath-cs!jml
+From: jml@cs.strath.ac.uk (Joseph McLean)
+Newsgroups: sci.math
+Subject: the extendability of digit sequences into primes
+Message-ID: <753@stracs.cs.strath.ac.uk>
+Date: 2 Dec 87 10:36:33 GMT
+Reply-To: jml@cs.strath.ac.uk (Joseph McLean)
+Organization: Comp. Sci. Dept., Strathclyde Univ., Scotland.
+Lines: 19
+
+Is the following conjecture reasonable and/or provable? :
+
+Given a sequence of digits, starting with a non-zero digit, of arbitrary
+but finite length, is it always possible to extend this sequence by
+appending more digits, in such a way as to form a prime?
+
+e.g. the sequence 1 can be extended into a prime in an infinite number
+of ways, as in 13, 17, 19, 101, 1231, 1579, etc (there an infinite
+number of primes beginning with a 1 by Bertrand's postulate).
+However, it is far more difficult to try and locate a prime which
+starts with the sequence 1528296922945708 (although at least one is known).
+
+My personal opinion is that the conjecture is reasonable, simply because
+one can keep adding digits at the end and checking for primality ad
+infinitum, and the law of averages will do the rest. Of course this is
+totally groundless mathematically, so can anyone provide a heuristic
+argument with more weight?
+
+        jml, the mad mathematician.
+#! rnews 3077
+Path: alberta!mnetor!uunet!husc6!psuvax1!burdvax!bigburd!fritzson
+From: fritzson@bigburd.PRC.Unisys.COM (Richard Fritzson)
+Newsgroups: comp.editors
+Subject: Re: lisp environments (Structure vs. text editors)
+Message-ID: <3375@bigburd.PRC.Unisys.COM>
+Date: 14 Dec 87 02:11:18 GMT
+References: <487@PT.CS.CMU.EDU> <460@cresswell.quintus.UUCP> <499@PT.CS.CMU.EDU>
+Sender: news@bigburd.PRC.Unisys.COM
+Organization: Unisys Corporation, Paoli Research Center; Paoli, PA
+Lines: 56
+
+In article <499@PT.CS.CMU.EDU> ralphw@IUS2.CS.CMU.EDU (Ralph Hyre) writes:
+>In article <460@cresswell.quintus.UUCP> pds@quintus.UUCP (Peter Schachte) writes:
+>>Text editors CANNOT simulate structure editors.  They can do a rather
+>>fe

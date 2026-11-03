@@ -1,0 +1,41 @@
+.EQ
+delim $$
+define <- ?< "\h'-0.5m'" up 10 "\(em" down 10 ?
+define gtorder ?"\z>\d\~\u"?
+define EXIST ?"\z\-\d\z\-\r\-\d\v'0.2m'\(br\v'-0.2m'"?
+define ALL ?"\o'V-'"?
+define 0M '0~...~M-1'
+define LH 'lo~...~hi'
+define RR 'bold R'
+define HH 'bold H'
+define KK 'bold K'
+define or '"\fBor\fI"~'
+define and '"\fBand\fI"~'
+define if '"\fBif\fI"~'
+define then '"\fBthen\fI"~'
+define else '"\fBelse\fI"~'
+define repeat '"\fBrepeat\fI"~'
+define until '"\fBuntil\fI"~'
+define while '"\fBwhile\fI"~'
+define do '"\fBdo\fI"~'
+define case '"\fBcase\fI"~'
+define end '"\fBend\fI"~'
+define begin '"\fBbegin\fI"~'
+define elseif '"\fBelseif\fI"~' 
+define for '"\fBfor\fI"~'
+define From '"\fBfrom\fI"~'
+define To '"\fBto\fI"~'
+define exit '"\fBexit\fI"~'
+.EN
+.ls 1	
+.ce
+COMPACT HASH TABLES USING BIDIRECTIONAL LINEAR PROBING
+.sp 3
+.ce
+John G. Cleary
+.ce
+The University of Calgary, Alberta, Canada.
+.sp 3
+.sp 20
+\u1\dAuthors Present Address: Man-Machine Systems Group, Department of
+Computer Science, The University of Calgary, 2500 University

@@ -1,0 +1,53 @@
+ges.
+.pp
+Alternatively, the probabilities the model assigns may change as each symbol
+is transmitted, based on the symbol frequencies seen \fIso far\fR in this
+message.
+This is an \fIadaptive\fR model.
+There is no need for a representative sample of text, because each message
+is treated as an independent unit, starting from scratch.
+The encoder's model changes with each symbol transmitted, and the decoder's
+changes with each symbol received, in sympathy.
+.pp
+More complex models can provide more accurate probabilistic predictions and
+hence achieve greater compression.
+For example, several characters of previous context could condition the
+next-symbol probability.
+Such methods have enabled mixed-case English text to be encoded in around
+2.2\ bit/char with two quite different kinds of model.
+(Cleary & Witten, 1984b; Cormack & Horspool, 1985).
+.[
+Cleary Witten 1984 data compression
+%D 1984b
+.]
+.[
+Cormack Horspool 1985 dynamic Markov
+%O April
+.]
+Techniques which do not separate modeling from coding so distinctly, like
+that of Ziv & Lempel (1978), do not seem to show such great potential for
+compression, although they may be appropriate when the aim is raw speed rather
+than compression performance (Welch, 1984).
+.[
+Ziv Lempel 1978 compression of individual sequences
+.]
+.[
+Welch 1984 data compression
+.]
+.pp
+The effectiveness of any model can be measured by the \fIentropy\fR of the
+message with respect to it, usually expressed in bits/symbol.
+Shannon's fundamental theorem of coding states that given messages randomly
+generated from a model, it is impossible to encode them into less bits
+(on average) than the entropy of that model (Shannon & Weaver, 1949).
+.[
+Shannon Weaver 1949
+.]
+.pp
+A message can be coded with respect to a model using either Huffman or
+arithmetic coding.
+The former method is frequently advocated as the best possible technique for
+reducing the encoded data rate.
+But it is not.
+Given that each symbol in the alphabet must translate into an integral number
+of bits in the encoding, Huffman coding indeed ach

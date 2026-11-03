@@ -1,0 +1,48 @@
+.pn 0
+.ls1
+.EQ
+delim $$
+.EN
+.ev1
+.ps-2
+.vs-2
+.ev
+\&
+.sp 10
+.ps+4
+.ce
+COMPUTER (IN)SECURITY \(em
+.sp
+.ce
+INFILTRATING OPEN SYSTEMS
+.ps-4
+.sp4
+.ce
+Ian H. Witten
+.sp2
+.ce4
+Department of Computer Science
+The University of Calgary
+2500 University Drive NW
+Calgary, Canada T2N 1N4
+.sp2
+.ce2
+November 1986
+Revised March 1987
+.bp 1
+.ls 2
+.pp
+Shared computer systems today are astonishingly insecure.
+And users, on the whole, are blithely unaware of the weaknesses of the
+systems in which they place \(em or rather, misplace \(em their trust.
+Taken literally, of course, it is meaningless to ``trust'' a computer system
+as such, for machines are neither trustworthy nor untrustworthy;
+these are human qualities.
+In trusting a system one is effectively trusting all those who create and
+alter it, in other words, all who have access (whether licit or
+illicit).
+Security is a fundamentally \fIhuman\fP issue.
+.pp
+This article aims not to solve security problems but to raise reader
+consciousness
+of the multifarious cunning ways that s

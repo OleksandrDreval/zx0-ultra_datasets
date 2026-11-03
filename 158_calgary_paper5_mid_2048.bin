@@ -1,0 +1,39 @@
+hmetic.
+The solution to this problem has three major parts.
+The first is to represent PROLOG's 
+arithmetic variables internally as intervals of real numbers.
+So the result of 'Z is 0.45*0.67' would be to bind Z to the 
+open interval (0.30,0.31).  
+This says that Z lies somewhere in the interval
+$0.30 < Z < 0.31$, which is certainly true, and probably as informative
+as possible given finite precision arithmetic.
+(Note that Z is NOT bound to the data structure (0.30,0.31), this
+is a hidden representation in much the same way that pointers are used
+to implement logical variables in PROLOG but are not explicitly visible
+to the user.  Throughout this paper brackets such as (...) or [...] will
+be used to represent open and closed intervals not Prolog data structures.)
+.pp
+The second part of the solution is to translate expressions such as
+\&'Z is (X*Y)/2' to the relational form 'multiply(X,Y,T0), multiply(2,Z,T0)'.
+Note that both the * and / operators have been translated to 'multiply'
+(with parameters in a different order).  This relational form will be seen to 
+be insensitive to which parameters are instantiated and which are not,
+thus providing invertibility.
+.pp
+The third part is to provide a small number of control 'predicates' able
+to guide the search for solutions.
+The resulting system is sufficiently powerful to be able to
+solve equations such as '0 is X*(X-2)+1' directly.
+.pp
+The next section gives a somewhat more formal description of arithmetic
+implemented this way.  Section III gives examples of its use and of the
+types of equations that are soluble within it.  Section IV compares our 
+approach here with that of other interval arithmetic systems and with
+constraint networks.  Section V notes some possibilities for a parallel 
+dataflow implementation which avoids many of the difficulties of traditional
+dataflow execution.
+.sh "II. Interval Representation"
+.pp
+Define $II(RR)$ to be the set of intervals over the real numbers, $RR$.
+So that the lower and upper bounds of each interval can be operated on as 
+sing

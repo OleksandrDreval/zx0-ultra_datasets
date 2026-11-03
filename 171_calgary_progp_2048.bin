@@ -1,0 +1,65 @@
+program interval(input,output);
+{dataflow simulator for real interval arithmetic}
+
+const
+	IMem = 500; {number of instructions}
+	DMem = 200;  {number of interval variables allowed}
+	Par = 3;   {max number of paramters for an operator}
+	Maxexp = 10; Minexp = -9;
+	Maxinf =10000; Mininf =-10000; {Tied to values of Minman and Maxman}
+	Maxman = 9999; Minman = -9999; {cannot exceed sqrt(maxint)}
+	Splitman = 1000; {Smallest normalized mantisa}
+	Digits = 4; {number of digits in mantissa}
+
+type
+	Positive= 0..maxint;
+	State  = -1..99;  {Used for holding state of operator -1:done}
+	OpType = (print,pr,tr,soln,readr,halve,halves,linh,mult,add,intgr,
+less,leq,noteq,sqrr,minr,maxr,modu,absr,trig,expr,lb,ub,copy,stop); {!!}
+	Ptr    = 1..DMem;
+	Loc    = 1..IMem;
+	Loc0   = 0..IMem;
+	EdgeT  = (hout,lin,hin,lout); {Warning this order is important in}
+				      {predicates such as gtS,geS}
+	CardT  = (finite,infinite);
+	ExpT   = Minexp..Maxexp;
+	ManT   = Mininf..Maxinf; 
+	Pflag  = (PNull,PSoln,PTrace,PPrint);
+	Sreal  = record
+		    edge:EdgeT;
+		    cardinality:CardT;
+		    exp:ExpT; {exponent}
+		    mantissa:ManT;
+		 end;
+	Int    = record
+		    hi:Sreal;
+		    lo:Sreal;
+	 end;
+	Instr  = record
+		    Code:OpType;
+		    Pars: array[0..Par] of 0..DMem;
+		 end;
+	DataMem= record
+		    D        :array [Ptr] of Int;
+		    S        :array [Loc] of State;
+		    LastHalve:Loc;
+		    RHalve   :array [Loc] of real;
+		 end;
+	DataFlags=record
+		    PF	     :array [Ptr] of Pflag;
+		 end;
+var
+	Debug  : (none,activity,post,trace,dump);
+	Cut    : (once,all);
+	GlobalEnd,Verifiable:boolean;
+	HalveThreshold:real;
+	I      : array [Loc] of Instr; {Memory holding instructions}
+	End    : Loc; {last instruction in I}
+	ParN   : array [OpType] of -1..Par; {number of parameters for each 
+			opcode. -1 means no result}
+        ParIntersect : array [OpType] of boolean ;
+	DInit  : DataMem; {initial memory which is cleared and 
+				used in first call}
+	DF     : DataFlags; {hold flags for variables, e.g. print/trace}
+	MaxDMem:0..DMem;
+	Shift  : array[0..Digits] of 1..

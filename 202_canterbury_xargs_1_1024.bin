@@ -1,0 +1,30 @@
+.TH XARGS 1L \" -*- nroff -*-
+.SH NAME
+xargs \- build and execute command lines from standard input
+.SH SYNOPSIS
+.B xargs
+[\-0prtx] [\-e[eof-str]] [\-i[replace-str]] [\-l[max-lines]]
+[\-n max-args] [\-s max-chars] [\-P max-procs] [\-\-null] [\-\-eof[=eof-str]]
+[\-\-replace[=replace-str]] [\-\-max-lines[=max-lines]] [\-\-interactive]
+[\-\-max-chars=max-chars] [\-\-verbose] [\-\-exit] [\-\-max-procs=max-procs]
+[\-\-max-args=max-args] [\-\-no-run-if-empty] [\-\-version] [\-\-help]
+[command [initial-arguments]]
+.SH DESCRIPTION
+This manual page
+documents the GNU version of
+.BR xargs .
+.B xargs
+reads arguments from the standard input, delimited by blanks (which can be
+protected with double or single quotes or a backslash) or newlines,
+and executes the
+.I command
+(default is /bin/echo) one or more times with any
+.I initial-arguments
+followed by arguments read from standard input.  Blank lines on the
+standard input are ignored.
+.P
+.B xargs
+exits with the following status:
+.nf
+0 if it succeeds
+123 if any invocation of

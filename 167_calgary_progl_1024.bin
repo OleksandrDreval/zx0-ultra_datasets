@@ -1,0 +1,36 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; form.l -- screen forms handler
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(declare
+  (specials t)
+  (macros t))
+
+(eval-when (compile)
+  (load 'utilities)
+  (load 'constants)
+  (load 'zone)
+  (load 'look)
+  (load 'font)
+  (load 'text)
+  (load 'text-edit))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;						generic fields
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defstruct
+  (field		; generic field
+    (:displace t)
+    (:list)
+    (:conc-name))
+  (type 'generic-field)		; type = generic
+  (zone (make-zone))		; bounding zone
+  (properties (list nil))	; empty property list
+)
+
+(defvar field-properties	; list of expected field properties
+  '("field-properties"
+    fill-ground		(solid pattern)		; should we draw when highlit?
+    fill-colour		(x_colour x_pattern)	; what colour or pattern?
+    empty-ground 	(solid pattern)		; should we draw when unlit?

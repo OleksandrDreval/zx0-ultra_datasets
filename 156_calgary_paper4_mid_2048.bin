@@ -1,0 +1,44 @@
+
+three arm movements are used to predict the next arm movement. 
+.pp
+When the inputs are received each such context and its associated 
+prediction (usually
+an action) are added to the Markov model.  (No
+counts or statistics are maintained \(em they are not necessary.)  When the
+context recurs later it will be retrieved along with all the predictions
+which have been stored with it.
+.pp
+After the contexts have been stored they 
+are updated by shifting in the new inputs. These new contexts are then
+matched against the model and all the associated predictions are retrieved.
+These independent predictions from the individual Markov models
+are then combined into a single composite 
+prediction.
+(A general theory of how to do this has been
+developed in [Cleary, 1980]).  
+.pp
+The final step is to present this 
+composite prediction to a device I have called the 'choice oracle'.
+This uses whatever information it sees fit to choose the next action.
+There are many possibilities for such a device.  One might be to choose
+from amongst the predicted actions if reward is expected and to choose
+some other random action if reward is not expected.  The whole system then 
+looks like
+a reward seeking homeostat.  At the other extreme the oracle might be
+a human programmer who chooses the next action according to his own
+principles.  The system then functions more like a programming by
+example system \(em [Witten, 1981] and [Witten, 1982] give examples of such 
+systems.
+[Andreae, 1977] gives an example of a 'teachable' system lying between
+these two extremes.
+.pp
+After an action is chosen this is
+transmitted to the external world and the resultant inputs are used
+to start the whole cycle again.  Note that the chosen action will
+be an input on the next cycle.
+.sh "Subroutines"
+.pp
+An important part of any programming language is the ability to write a 
+fragment of a program and then have it used many times without it having
+to be reprogrammed each time.  A crucial feature of such shared code is
+that after it has been executed the program 

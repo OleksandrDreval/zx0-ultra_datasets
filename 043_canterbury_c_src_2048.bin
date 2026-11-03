@@ -1,0 +1,75 @@
+RD_BYTES           2
+#define ADPK_HEADER_BYTES           1
+#define MAX_ADPK_LSB_BITS           12
+#define MIN_MATCH_LENGTH_NEW_OFFSET 2
+#define X86_OPCODE_CALL_REL16       0xE8
+
+typedef struct {
+    int prev_node;
+    int end_pos;
+    int offset; /* 0 denotes a Literal run; > 0 denotes a Match with this offset */
+} ParseNode;
+
+typedef struct {
+    ParseNode *nodes;
+    int count;
+    int capacity;
+} NodePool;
+
+typedef struct {
+    int pos;
+    int base_cost;
+    int node_idx;
+} FrontierEntry;
+
+/* Cache-line aligned layout: count + entries[0..4] reside in a single 64-byte cache line */
+typedef struct {
+    int count;
+    FrontierEntry entries[EXACT_FRONTIER_CAPACITY];
+} MonotonicFrontier;
+
+typedef struct {
+    int end_pos;
+    int length;
+    int offset; /* 0 = Literal, > 0 = Match */
+} Token;
+
+static inline int compute_elias_gamma_bits(int value) {
+    assert(value >= 1);
+#if defined(__GNUC__) || defined(__clang__)
+    return 1 + 2 * (31 - __builtin_clz((unsigned int)value));
+#else
+    int bits = 1;
+    while (value >>= 1) {
+        bits += 2;
+    }
+    return bits;
+#endif
+}
+
+static inline int compute_new_offset_overhead_bits(int offset, int offset_lsb_bits) {
+    int msb_group = ((offset - 1) >> offset_lsb_bits) + 1;
+    return 1 + compute_elias_gamma_bits(msb_group) + offset_lsb_bits;
+}
+
+static void node_pool_init(NodePool *pool, int initial_capacity) {
+    pool->capacity = initial_capacity > 0 ? initial_capacity : INITIAL_NODE_POOL_CAPACITY;
+    pool->count = 0;
+    pool->nodes = (ParseNode *)malloc((size_t)pool->capacity * sizeof(ParseNode));
+    assert(pool->nodes != NULL);
+}
+
+static void node_pool_free(NodePool *pool) {
+    free(pool->nodes);
+    pool->nodes = NULL;
+    pool->count = 0;
+    pool->capacity = 0;
+}
+
+static int node_pool_push(NodePool *pool, int prev_node, int end_pos, int offset) {
+    if (pool->count >= pool->capacity) {
+        pool->capacity *= 2;
+        pool->nodes = (ParseNode *)realloc(pool->nodes, (size_t)pool->capacity * sizeof(ParseNode));
+        assert(pool->nodes != NULL);
+    }
+ 

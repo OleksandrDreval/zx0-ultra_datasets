@@ -1,0 +1,62 @@
+ggregate-field	; aggregate field = form
+    (:displace t)
+    (:list)
+    (:conc-name))
+  (type 'aggregate-field)		; type
+  (zone (make-zone))		; bounding zone
+  (properties (list nil))	; empty property list
+  subfields			; list of subfields
+  selection			; which subfield was last hit
+)
+  
+(defvar aggregate-field-properties
+  `("aggregate-field-properties"
+    = ,field-properties
+   ))	; can use this as real plist for online documentation
+
+(defun draw-aggregate-field (f)
+  (draw-field-background f)			; clear background, if any
+  (draw-field-border f)				; draw border, if any
+  (mapc 'draw-field (aggregate-field-subfields f)) ; draw subfields
+  (w-flush (window-w (zone-window (field-zone f)))) t) ; flush it out
+
+(defun init-aggregate-field (f)
+  (mapc 'init-field (aggregate-field-subfields f))
+  (alter-aggregate-field f selection nil) t)
+
+(defun resize-aggregate-field (f box)
+  (alter-zone (field-zone f) box box))
+
+(defun check-aggregate-field (f p)
+  (do ((subfields (aggregate-field-subfields f)	; go through subfields
+	 (cdr subfields))
+       (gotcha))
+      ((or (null subfields)				; stop when no more
+	   (setq gotcha (check-field (car subfields) p))) ; or when one is hit
+       (alter-aggregate-field f selection gotcha)	; remember which one
+       gotcha)))					; also return it
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;						remote fields
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; A remote field is a field which activates another field when hit.
+;;; Usually the remote field has some functional significance!
+
+(defstruct
+  (remote-field		; remote field
+    (:displace t)
+    (:list)
+    (:conc-name))
+  (type 'remote-field)		; type = remote
+  (zone (make-zone))		; bounding zone
+  (properties (list nil))	; empty plist
+  (target)			; the actual target field
+  (point)			; x,y coords to pretend to use
+)
+
+(defvar remote-field-properties
+  `("remote-field-properties"
+    = ,field-properties
+   ))	; can use this as real plist for online documentation
+
+(de
